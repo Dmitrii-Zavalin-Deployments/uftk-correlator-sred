@@ -1,6 +1,6 @@
-# 📄 .github/workflows/uftk-correlator-sred.yml
+# 📄 .github/workflows/uftk_correlator_sred.yml
 
-name: uftk-correlator-sred.yml
+name: uftk_correlator_sred.yml
 
 on:
   push:
@@ -46,7 +46,7 @@ jobs:
             git push || echo "No changes to push"
           )
   
-  uftk-correlator-sred:
+  uftk_correlator_sred:
     needs: code_quality_check
     runs-on: ubuntu-latest
     env:
