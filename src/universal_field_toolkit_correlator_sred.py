@@ -17,15 +17,30 @@ os.makedirs(WORKING_DIR, exist_ok=True)
 # ---------------------------------------------------------
 
 def compute_correlations(df):
-    return df.corr(numeric_only=True)
+    # Clean placeholder values
+    df = df.replace(["...", "", "nan", "None"], pd.NA)
+
+    # Convert all possible numeric columns
+    df = df.apply(pd.to_numeric, errors="ignore")
+
+    # Compute correlation
+    corr = df.corr(numeric_only=True)
+
+    # Replace NaN with 0.0 so matrix always has values
+    corr = corr.fillna(0.0)
+
+    return corr
+
 
 def group_by_texture(df):
     if "Texture_Class" in df.columns:
         return df.groupby("Texture_Class").mean(numeric_only=True)
     return pd.DataFrame()
 
+
 def compute_statistics(df):
     return df.describe()
+
 
 def compute_data_density(df):
     if "Texture_Class" not in df.columns:
@@ -49,15 +64,12 @@ def compute_data_density(df):
 # ---------------------------------------------------------
 
 def df_to_markdown(df):
-    """Convert a DataFrame to markdown without requiring tabulate."""
     if df.empty:
         return "_No data_"
 
-    # Build header
     header = "| " + " | ".join(df.columns) + " |"
     separator = "| " + " | ".join(["---"] * len(df.columns)) + " |"
 
-    # Build rows
     rows = []
     for idx, row in df.iterrows():
         rows.append("| " + " | ".join(str(x) for x in row.values) + " |")
