@@ -3,12 +3,15 @@ import pandas as pd
 import shutil
 
 # ---------------------------------------------------------
-# Unified working directory
+# Unified working directory (GitHub‑safe)
 # ---------------------------------------------------------
 
-WORKING_DIR = "/data/testing-input-output"
+WORKING_DIR = os.environ.get("WORKING_DIR", "data/testing-input-output")
 CSV_PATH = os.path.join(WORKING_DIR, "field_data.csv")
 REPORT_PATH = os.path.join(WORKING_DIR, "correlations.md")
+
+# Ensure directory exists
+os.makedirs(WORKING_DIR, exist_ok=True)
 
 # ---------------------------------------------------------
 # Correlation helpers
@@ -81,7 +84,6 @@ def generate_correlated_images():
 # ---------------------------------------------------------
 
 def update_csv_with_summary(df, corr):
-    # Add global correlation metrics
     df["Global_Correlation_Count"] = len(corr.columns)
     df.to_csv(CSV_PATH, index=False)
     print("✓ Updated field_data.csv with correlation summary")
@@ -92,7 +94,7 @@ def update_csv_with_summary(df, corr):
 
 def main():
     if not os.path.isfile(CSV_PATH):
-        print("❌ ERROR: field_data.csv not found.")
+        print(f"❌ ERROR: field_data.csv not found in {CSV_PATH}")
         return
 
     df = pd.read_csv(CSV_PATH)
@@ -109,7 +111,7 @@ def main():
 
     update_csv_with_summary(df, corr)
 
-    print("🎉 Correlator complete. Outputs written to /data/testing-input-output")
+    print(f"🎉 Correlator complete. Outputs written to {WORKING_DIR}")
 
 if __name__ == "__main__":
     main()
