@@ -31,7 +31,7 @@ def test_compute_correlations_numeric_only():
     assert set(corr.columns) == {"a", "b"}
     assert set(corr.index) == {"a", "b"}
     # a and b perfectly correlated
-    assert corr.loc["a", "b]"] == pytest.approx(1.0)
+    assert corr.loc["a", "b"] == pytest.approx(1.0)
 
 
 # ---------------------------------------------------------
