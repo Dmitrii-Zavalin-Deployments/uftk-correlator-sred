@@ -10,7 +10,6 @@ WORKING_DIR = os.environ.get("WORKING_DIR", "data/testing-input-output")
 CSV_PATH = os.path.join(WORKING_DIR, "field_data.csv")
 REPORT_PATH = os.path.join(WORKING_DIR, "correlations.md")
 
-# Ensure directory exists
 os.makedirs(WORKING_DIR, exist_ok=True)
 
 # ---------------------------------------------------------
@@ -46,6 +45,26 @@ def compute_data_density(df):
     return density
 
 # ---------------------------------------------------------
+# Safe markdown fallback (no tabulate dependency)
+# ---------------------------------------------------------
+
+def df_to_markdown(df):
+    """Convert a DataFrame to markdown without requiring tabulate."""
+    if df.empty:
+        return "_No data_"
+
+    # Build header
+    header = "| " + " | ".join(df.columns) + " |"
+    separator = "| " + " | ".join(["---"] * len(df.columns)) + " |"
+
+    # Build rows
+    rows = []
+    for idx, row in df.iterrows():
+        rows.append("| " + " | ".join(str(x) for x in row.values) + " |")
+
+    return "\n".join([header, separator] + rows)
+
+# ---------------------------------------------------------
 # Markdown report
 # ---------------------------------------------------------
 
@@ -54,17 +73,20 @@ def generate_markdown_report(corr, grouped, stats, density):
         f.write("# Correlation Report\n\n")
 
         f.write("## Correlation Matrix\n")
-        f.write(corr.to_markdown() + "\n\n")
+        f.write(df_to_markdown(corr) + "\n\n")
 
         f.write("## Grouped by Texture\n")
         if not grouped.empty:
-            f.write(grouped.to_markdown() + "\n\n")
+            f.write(df_to_markdown(grouped) + "\n\n")
         else:
             f.write("_No texture groups available_\n\n")
 
         f.write("## Data Density\n")
-        for cls, msg in density.items():
-            f.write(f"- {cls}: {msg}\n")
+        if density:
+            for cls, msg in density.items():
+                f.write(f"- {cls}: {msg}\n")
+        else:
+            f.write("_No density information available_\n")
 
 # ---------------------------------------------------------
 # Copy analyzed → correlated
@@ -73,9 +95,10 @@ def generate_markdown_report(corr, grouped, stats, density):
 def generate_correlated_images():
     for filename in os.listdir(WORKING_DIR):
         if filename.endswith("_analyzed.jpg"):
+            name, ext = os.path.splitext(filename)
+            base = name.replace("_analyzed", "")
             src = os.path.join(WORKING_DIR, filename)
-            base = filename.replace("_analyzed", "")
-            dst = os.path.join(WORKING_DIR, f"{base}_correlated.jpg")
+            dst = os.path.join(WORKING_DIR, f"{base}_correlated{ext}")
             shutil.copy2(src, dst)
             print(f"✓ Created {dst}")
 
